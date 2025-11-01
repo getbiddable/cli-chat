@@ -23,6 +23,38 @@ def load_system_prompt():
     return None
 
 
+def detect_repetition(text, min_chunk_size=50, max_repetitions=2):
+    """
+    Detect if text contains repetitive patterns and truncate if necessary.
+    Returns the cleaned text and a boolean indicating if repetition was found.
+    """
+    lines = text.split('\n')
+
+    # Check for repeated line sequences
+    for chunk_size in range(min_chunk_size, len(lines) // 2):
+        for i in range(len(lines) - chunk_size * max_repetitions):
+            chunk = '\n'.join(lines[i:i + chunk_size])
+
+            # Check if this chunk repeats immediately after
+            repetition_count = 1
+            pos = i + chunk_size
+
+            while pos + chunk_size <= len(lines):
+                next_chunk = '\n'.join(lines[pos:pos + chunk_size])
+                if chunk.strip() == next_chunk.strip():
+                    repetition_count += 1
+                    pos += chunk_size
+                else:
+                    break
+
+            # If we found excessive repetition, truncate
+            if repetition_count >= max_repetitions:
+                truncated_text = '\n'.join(lines[:i + chunk_size])
+                return truncated_text + "\n\n[Note: Repetitive content detected and removed]", True
+
+    return text, False
+
+
 def send_message(message, history):
     """Send a message to the LLM and return the response."""
     url = "http://localhost:1234/v1/chat/completions"
@@ -32,11 +64,12 @@ def send_message(message, history):
 
     data = {
         "messages": messages,
-        "temperature": 0.7,
+        "temperature": 0.6,  # Lowered from 0.7 for more focused responses
         "max_tokens": 2048,
         "stream": False,
-        "frequency_penalty": 0.3,
-        "presence_penalty": 0.3
+        "frequency_penalty": 0.8,  # Increased from 0.3 to strongly penalize repeated tokens
+        "presence_penalty": 0.6,   # Increased from 0.3 to encourage topic diversity
+        "repetition_penalty": 1.15 # Add explicit repetition penalty (if supported by your LLM server)
     }
 
     try:
@@ -48,7 +81,13 @@ def send_message(message, history):
 
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
+            content = result['choices'][0]['message']['content']
+
+            # Check for and remove repetitive content
+            cleaned_content, had_repetition = detect_repetition(content)
+            if had_repetition:
+                print("[Warning: Repetitive content was detected and removed from response]")
+            return cleaned_content
 
     except urllib.error.URLError as e:
         return f"Error: Could not connect to LLM at {url}. Make sure it's running.\n{e}"
