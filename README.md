@@ -82,6 +82,17 @@ rm ~/.llmchat
 - Type `exit` or `quit` to end the conversation
 - Press `Ctrl+C` to quit
 
+## Default Parameters
+
+The chat interface uses these default parameters to improve response quality and prevent repetition:
+
+- **temperature**: 0.7 (balanced creativity vs consistency)
+- **max_tokens**: 2048 (prevents excessively long responses)
+- **frequency_penalty**: 0.3 (reduces repetitive phrases)
+- **presence_penalty**: 0.3 (encourages topic diversity)
+
+These help prevent the model from getting stuck in repetitive loops while maintaining good response quality.
+
 ## Example
 
 ```

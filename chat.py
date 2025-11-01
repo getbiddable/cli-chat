@@ -33,8 +33,10 @@ def send_message(message, history):
     data = {
         "messages": messages,
         "temperature": 0.7,
-        "max_tokens": -1,
-        "stream": False
+        "max_tokens": 2048,
+        "stream": False,
+        "frequency_penalty": 0.3,
+        "presence_penalty": 0.3
     }
 
     try:
