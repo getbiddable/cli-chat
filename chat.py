@@ -11,7 +11,7 @@ import os
 
 def load_system_prompt():
     """Load system prompt from config file if it exists."""
-    config_path = os.path.expanduser("~/.llmchat")
+    config_path = ".llmchat"  # Repo root only
 
     if os.path.exists(config_path):
         try:
@@ -105,7 +105,7 @@ def main():
     system_prompt = load_system_prompt()
     if system_prompt:
         history.append({"role": "system", "content": system_prompt})
-        print(f"[System prompt loaded from ~/.llmchat]\n")
+        print(f"[System prompt loaded from .llmchat]\n")
 
     try:
         while True:
