@@ -86,7 +86,7 @@ rm ~/.llmchat
 
 The chat interface uses these default parameters to improve response quality and prevent repetition:
 
-- **temperature**: 0.7 (balanced creativity vs consistency)
+- **temperature**: 2.0 (balanced creativity vs consistency)
 - **max_tokens**: 2048 (prevents excessively long responses)
 - **frequency_penalty**: 0.3 (reduces repetitive phrases)
 - **presence_penalty**: 0.3 (encourages topic diversity)

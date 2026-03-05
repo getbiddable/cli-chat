@@ -9,18 +9,28 @@ import urllib.error
 import os
 
 
-def load_system_prompt():
-    """Load system prompt from config file if it exists."""
-    config_path = ".llmchat"  # Repo root only
+DEFAULT_URL = "http://localhost:1234"
+CONFIG_PATH = ".llmchat"
 
-    if os.path.exists(config_path):
+
+def load_config():
+    """Load URL and system prompt from .llmchat config file."""
+    url = DEFAULT_URL
+    prompt_lines = []
+
+    if os.path.exists(CONFIG_PATH):
         try:
-            with open(config_path, 'r') as f:
-                return f.read().strip()
+            with open(CONFIG_PATH, 'r') as f:
+                for line in f:
+                    if line.startswith("url="):
+                        url = line[4:].strip()
+                    else:
+                        prompt_lines.append(line)
         except Exception as e:
-            print(f"Warning: Could not read config file {config_path}: {e}")
-            return None
-    return None
+            print(f"Warning: Could not read config file {CONFIG_PATH}: {e}")
+
+    system_prompt = ''.join(prompt_lines).strip() or None
+    return url, system_prompt
 
 
 def detect_repetition(text, min_chunk_size=50, max_repetitions=2):
@@ -55,9 +65,9 @@ def detect_repetition(text, min_chunk_size=50, max_repetitions=2):
     return text, False
 
 
-def send_message(message, history):
+def send_message(message, history, base_url):
     """Send a message to the LLM and return the response."""
-    url = "http://localhost:1234/v1/chat/completions"
+    url = f"{base_url}/v1/chat/completions"
 
     # Build messages with history
     messages = history + [{"role": "user", "content": message}]
@@ -97,12 +107,19 @@ def send_message(message, history):
 
 def main():
     """Main chat loop."""
-    print("Chat Interface - Connected to localhost:1234")
+    base_url, system_prompt = load_config()
+
+    if "--config" in sys.argv:
+        print(f"Config file: {CONFIG_PATH}")
+        print(f"URL:         {base_url}")
+        print(f"System prompt:\n  {system_prompt or '(none)'}")
+        return
+
+    print(f"Chat Interface - Connected to {base_url}")
     print("Type 'exit', 'quit', or press Ctrl+C to end the conversation.\n")
 
     # Load system prompt if configured
     history = []
-    system_prompt = load_system_prompt()
     if system_prompt:
         history.append({"role": "system", "content": system_prompt})
         print(f"[System prompt loaded from .llmchat]\n")
@@ -125,7 +142,7 @@ def main():
                 break
 
             # Send message and get response
-            response = send_message(user_input, history)
+            response = send_message(user_input, history, base_url)
 
             # Display response
             print(f"\nAssistant: {response}\n")
