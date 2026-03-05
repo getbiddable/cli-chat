@@ -10,7 +10,7 @@ import os
 
 
 DEFAULT_URL = "http://localhost:1234"
-CONFIG_PATH = ".llmchat"
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".llmchat")
 
 
 def load_config():
